@@ -76,8 +76,8 @@ class Installer extends LibraryInstaller
 
 		$extra = $package->getExtra();
 		// recursively copy the contents of the install directory, providing each file is not there.
-		$strInstallDir = $this->getPackageBasePath($package);
-		$strDestDir = ($this->vendorDir ? $this->vendorDir . '/' : '') .'../project';
+		$strInstallDir = $this->getPackageBasePath($package) . '/install/project';
+		$strDestDir = realpath(($this->vendorDir ? $this->vendorDir . '/' : '') .'../project');
 
 		$this->io->write('Copying files from ' . $strInstallDir . ' to ' . $strDestDir);
 		self::copy_dir($strInstallDir, $strDestDir);
