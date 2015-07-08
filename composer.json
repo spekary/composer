@@ -11,6 +11,6 @@
       "psr-4": { "QCubed\\Composer\\": "" }
   },
   "extra": {
-    "class": "phpDocumentor\\Composer\\InstallerPlugin"
+    "class": "QCubed\\Composer\\InstallerPlugin"
   }
 }
