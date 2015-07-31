@@ -16,12 +16,24 @@ $__CONFIG_ONLY__ = true;
 class Installer extends LibraryInstaller
 {
 	/** Overrides **/
+	/**
+	 * Return the types of packages that this installer is responsible for installing.
+	 *
+	 * @param $packageType
+	 * @return bool
+	 */
 	public function supports($packageType)
 	{
 		return ('qcubed-plugin' === $packageType ||
 			'qcubed-framework' === $packageType);
 	}
 
+	/**
+	 * An override to return the correct destination for a package.
+	 *
+	 * @param PackageInterface $package
+	 * @return string
+	 */
 	public function getPackageBasePath(PackageInterface $package)
 	{
 		$parts = explode('_', $package->getName());
@@ -34,6 +46,12 @@ class Installer extends LibraryInstaller
 		}
 	}
 
+	/**
+	 * Respond to the install command.
+	 *
+	 * @param InstalledRepositoryInterface $repo
+	 * @param PackageInterface $package
+	 */
 	public function install(InstalledRepositoryInterface $repo, PackageInterface $package) {
 		parent::install($repo, $package);
 
@@ -102,6 +120,14 @@ class Installer extends LibraryInstaller
 		}
 	}
 
+
+	/**
+	 * Respond to an update command.
+	 *
+	 * @param InstalledRepositoryInterface $repo
+	 * @param PackageInterface $initial
+	 * @param PackageInterface $target
+	 */
 	public function update(InstalledRepositoryInterface $repo, PackageInterface $initial, PackageInterface $target) {
 		parent::install($repo, $initial, $target);
 
@@ -116,11 +142,23 @@ class Installer extends LibraryInstaller
 
 	}
 
+	/**
+	 * Return true if the needle starts with the haystack.
+	 *
+	 * @param string $haystack
+	 * @param string $needle
+	 * @return bool
+	 */
 	protected static function startsWith($haystack, $needle) {
 		// search backwards starting from haystack length characters from the end
 		return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== FALSE;
 	}
 
+	/**
+	 * Update a package. In particular, new install files will be moved to the correct location.
+	 *
+	 * @param $package
+	 */
 	protected function composerFrameworkUpdate ($package) {
 		require_once(($this->vendorDir ? $this->vendorDir . '/' : '') . 'qcubed/framework/qcubed.inc.php');	// get the configuration options so we can know where to put the plugin files
 
@@ -133,6 +171,12 @@ class Installer extends LibraryInstaller
 		self::copy_dir($strInstallDir, $strDestDir);
 	}
 
+	/**
+	 * Uninstalls a plugin if requested.
+	 *
+	 * @param InstalledRepositoryInterface $repo
+	 * @param PackageInterface $package
+	 */
 	public function uninstall(InstalledRepositoryInterface $repo, PackageInterface $package)
 	{
 		$strPackageName = $package->getName();
@@ -143,7 +187,33 @@ class Installer extends LibraryInstaller
 	}
 
 
+	/**
+	 * Delete the given plugin.
+	 *
+	 * @param PackageInterface $package
+	 */
+	public function composerPluginUninstall (PackageInterface $package) {
+		require_once(($this->vendorDir ? $this->vendorDir . '/' : '') . 'qcubed/framework/qcubed.inc.php');	// get the configuration options so we can know where the plugin files are
+
+		// recursively delete the contents of the install directory, providing each file is there.
+		$strPluginDir = $this->getPackageBasePath($package) . '/install';
+		$strDestDir = __INCLUDES__ . '/plugins';
+
+		$this->io->write('Removing files from ' . $strPluginDir);
+		self::remove_matching_dir($strPluginDir, $strDestDir);
+	}
+
+	/**
+	 * Copy the contents of the source directory into the destination directory, creating the destination directory
+	 * if it does not exist. If the destination file exists, it will NOT overwrite the file.
+	 *
+	 * @param string $src	source directory
+	 * @param string $dst	destination directory
+	 */
 	protected static function copy_dir($src,$dst) {
+		if (!$src || !is_dir($src)) {
+			return;
+		}
 		$dir = opendir($src);
 
 		if (!file_exists($dst)) {
@@ -164,19 +234,14 @@ class Installer extends LibraryInstaller
 		closedir($dir);
 	}
 
-	public function composerPluginUninstall ($package) {
-		require_once(($this->vendorDir ? $this->vendorDir . '/' : '') . 'qcubed/framework/qcubed.inc.php');	// get the configuration options so we can know where to put the plugin files
-
-		// recursively delete the contents of the install directory, providing each file is there.
-		$strPluginDir = $this->getPackageBasePath($package) . '/install';
-		$strDestDir = __INCLUDES__ . '/plugins';
-
-		$this->io->write('Removing files from ' . $strPluginDir);
-		self::remove_matching_dir($strPluginDir, $strDestDir);
-	}
-
+	/**
+	 * Remove the files in the destination directory whose names match the files in the source directory.
+	 *
+	 * @param string $src	Source directory
+	 * @param string $dst	Destination directory
+	 */
 	protected static function remove_matching_dir($src,$dst) {
-		if (!$dst || !$src) return;	// prevent deleting an entire disk by accidentally calling this with an empty string!
+		if (!$dst || !$src || !is_dir($src) || !is_dir($dst)) return;	// prevent deleting an entire disk by accidentally calling this with an empty string!
 		$dir = opendir($src);
 
 		while(false !== ( $file = readdir($dir)) ) {
@@ -194,8 +259,13 @@ class Installer extends LibraryInstaller
 		closedir($dir);
 	}
 
+	/**
+	 * Delete a directory and all of its contents.
+	 *
+	 * @param string $dst Directory to delete
+	 */
 	protected static function remove_dir($dst) {
-		if (!$dst) return;	// prevent deleting an entire disk by accidentally calling this with an empty string!
+		if (!$dst || !is_dir($dst)) return;	// prevent deleting an entire disk by accidentally calling this with an empty string!
 		$dir = opendir($dst);
 
 		while(false !== ( $file = readdir($dir)) ) {
