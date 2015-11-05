@@ -84,6 +84,10 @@ class Installer extends LibraryInstaller
 		self::copy_dir($strInstallDir, $strDestDir);
 	}
 
+	protected function NormalizeNonPosixPath($s){
+		return str_replace('\\', '/', $s);
+	}
+
 	/**
 	 * First time installation of framework. For first-time installation, we create the project directory and modify
 	 * the configuration file.
@@ -91,25 +95,30 @@ class Installer extends LibraryInstaller
 	 * @param $strPackageName
 	 */
 	protected function composerFrameworkInstall ($package) {
-
 		$extra = $package->getExtra();
+
 		// recursively copy the contents of the install directory, providing each file is not there.
-		$strInstallDir = $this->getPackageBasePath($package) . '/install/project';
+		$strInstallDir = self::NormalizeNonPosixPath($this->getPackageBasePath($package)) . '/install/project';
 		$strDestDir = ($this->vendorDir ? $this->vendorDir . '/' : '') . '../project'; // try to find the default project location
+		$strDestDir = self::NormalizeNonPosixPath($strDestDir);
 
 		$this->io->write('Copying files from ' . $strInstallDir . ' to ' . $strDestDir);
 		self::copy_dir($strInstallDir, $strDestDir);
 
 		// Make sure particular directories are writable by the web server. These are listed in the extra section of the composer.json file.
 		// We are assuming that the first time installation is installed in a subdirectory of docroot.
-		$strInstallDir = realpath(dirname($strDestDir));
+		$strInstallDir = self::NormalizeNonPosixPath(realpath(dirname($strDestDir)));
 		$strSubDirectory = '/' . basename($strInstallDir);
-		$strDocRoot = realpath ($strInstallDir . '/../');
+		$strDocRoot = self::NormalizeNonPosixPath(realpath($strInstallDir . '/../'));
 		$strConfigDirectory = $strDestDir . '/includes/configuration';
 
 		$this->io->write('Updating permissions');
 		foreach ($extra['writePermission'] as $strDir) {
-			chmod ($strInstallDir . '/' . $strDir, 0777);
+			$strTargetDir = $strInstallDir . '/' . $strDir;
+			if(!file_exists($strTargetDir)){
+				mkdir($strTargetDir, 0777, true);
+			}
+			chmod ($strTargetDir, 0777);
 		}
 
 		// fix up the configuration file
