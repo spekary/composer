@@ -28,22 +28,14 @@ class Installer extends LibraryInstaller
 			'qcubed-framework' === $packageType);
 	}
 
-	/**
-	 * An override to return the correct destination for a package.
-	 *
-	 * @param PackageInterface $package
-	 * @return string
-	 */
-	public function getPackageBasePath(PackageInterface $package)
-	{
+	public function getInstallPath(PackageInterface $package) {
+		$strDest = parent::getInstallPath($package);
 		$parts = explode('_', $package->getName());
 
 		if ('qcubed/plugin' === $parts[0]) {
-			$this->initializeVendorDir();
-			return ($this->vendorDir ? $this->vendorDir . '/' : '') . 'qcubed/plugin/' . $parts[1];
-		} else {
-			return parent::getPackageBasePath($package);
+			$strDest = ($this->vendorDir ? $this->vendorDir . '/' : '') . 'qcubed/plugin/' . $parts[1];
 		}
+		return $strDest;
 	}
 
 	/**
