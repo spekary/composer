@@ -11,8 +11,6 @@ use Composer\Package\PackageInterface;
 use Composer\Installer\LibraryInstaller;
 use Composer\Repository\InstalledRepositoryInterface;
 
-$__CONFIG_ONLY__ = true;
-
 class Installer extends LibraryInstaller
 {
 	/** Overrides **/
@@ -64,7 +62,8 @@ class Installer extends LibraryInstaller
 	 * @param $strPackageName
 	 */
 	protected function composerPluginInstall ($package) {
-		require_once(($this->vendorDir ? $this->vendorDir . '/' : '') . 'qcubed/framework/qcubed.inc.php');	// get the configuration options so we can know where to put the plugin files
+		$__CONFIG_ONLY__ = true;
+		require(($this->vendorDir ? $this->vendorDir . '/' : '') . 'qcubed/framework/qcubed.inc.php');	// get the configuration options so we can know where to put the plugin files
 
 		// recursively copy the contents of the install subdirectory in the plugin.
 		$strPluginDir = $this->getPackageBasePath($package);
